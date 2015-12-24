@@ -29,7 +29,9 @@ debconf-set-selections <<< "postfix postfix/mailname string $POSTFIX_HOSTMASTER"
 
 aptitude -y -q install postfix
 
-echo "* open for email transfer in firewall"
+echo -e "\n********************************************************"
+echo -e "* Setting firewall"
+echo -e "********************************************************"
 
 # Allow Sendmail
 [ ! -z "$FIREWALL_SENDMAIL" ] && {
@@ -65,5 +67,23 @@ echo "* open for email transfer in firewall"
 [ ! -z "$FIREWALL_POPS3" ] && {
   firewall_add_rule $FIREWALL_POPS3
 }
+
+echo -e "\n********************************************************"
+echo -e "* Making database for user authentication"
+echo -e "********************************************************"
+
+[ -z "$SQL_SERVER" ] && {
+  echo "* Missing SQL server. Can't find any one installed :("
+  exit 1
+}
+
+case "${SQL_SERVER}" in
+  psql)
+    #TODO sql script that make DB for dovecot
+  ;;
+  mysql)
+    #TODO sql script that make DB for dovecot
+  ;;
+esac
 
 echo -e "DONE install postfix"

@@ -2,6 +2,10 @@
 
 POSTFIX_HOSTMASTER="change-me.com" # change it to your domainname
 
+# Define which sql server to use.
+# SQL_SERVER="psql"
+type mysql >/dev/null 2>&1 && SQL_SERVER="mysql" || type psql >/dev/null 2>&1 && SQL_SERVER="psql"
+
 FIREWALL_RULES_UP_FILENAME="/etc/iptables.up.rules"
 FIREWALL_SENDMAIL=25
 FIREWALL_SENDMAIL_SUBMISSION=587

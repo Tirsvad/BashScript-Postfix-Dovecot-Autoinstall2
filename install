@@ -1,0 +1,49 @@
+#!/bin/bash
+DEBIAN_FRONTEND=noninteractive
+
+set -e # Exit immediately if a command exits with a non-zero status.
+set -u #
+
+source ./config
+
+firewall_delete_rule () {
+  grep -v "$1" $FIREWALL_RULES_UP_FILENAME > /etc/iptables.new.rules
+  iptables-restore < /etc/iptables.new.rules
+  iptables-save > /etc/iptables.up.rules
+}
+
+firewall_add_rule () {
+  firewall_delete_rule "dport $1"
+  firewall_delete_rule "sport $1"
+  iptables -A INPUT -p tcp --dport $1 -m state --state NEW,ESTABLISHED -j ACCEPT
+  iptables -A OUTPUT -p tcp --sport $1 -m state --state ESTABLISHED -j ACCEPT
+  iptables-save > /etc/iptables.up.rules
+}
+
+echo -e "\n********************************************************"
+echo -e "* Installing postfix"
+echo -e "********************************************************"
+
+debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+debconf-set-selections <<< "postfix postfix/mailname string $POSTFIX_HOSTMASTER"
+
+aptitude -y -q install postfix
+
+echo "* open for email transfer in firewall"
+
+# Allow Sendmail
+[ ! -z "$FIREWALL_SENDMAIL" ] && {
+  firewall_add_rule $FIREWALL_SENDMAIL
+}
+
+# Allow IMAP
+[ ! -z "$FIREWALL_IMAP" ] && {
+  firewall_add_rule $FIREWALL_IMAP
+}
+
+# Allow IMAPs
+[ ! -z "$FIREWALL_IMAPS" ] && {
+  firewall_add_rule $FIREWALL_IMAPS
+}
+
+echo -e "DONE install postfix"

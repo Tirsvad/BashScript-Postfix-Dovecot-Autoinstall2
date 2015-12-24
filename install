@@ -36,6 +36,11 @@ echo "* open for email transfer in firewall"
   firewall_add_rule $FIREWALL_SENDMAIL
 }
 
+# Allow sendmail via submission port
+[ ! -z "$FIREWALL_SENDMAIL_SUBMISSION" ] && {
+  firewall_add_rule $FIREWALL_SENDMAIL_SUBMISSION
+}
+
 # Allow IMAP
 [ ! -z "$FIREWALL_IMAP" ] && {
   firewall_add_rule $FIREWALL_IMAP
@@ -44,6 +49,21 @@ echo "* open for email transfer in firewall"
 # Allow IMAPs
 [ ! -z "$FIREWALL_IMAPS" ] && {
   firewall_add_rule $FIREWALL_IMAPS
+}
+
+# Allow pop
+[ ! -z "$FIREWALL_POP" ] && {
+  firewall_add_rule $FIREWALL_POP
+}
+
+# Allow pops
+[ ! -z "$FIREWALL_POPS" ] && {
+  firewall_add_rule $FIREWALL_POPS
+}
+
+# Allow pop3s
+[ ! -z "$FIREWALL_POPS3" ] && {
+  firewall_add_rule $FIREWALL_POPS3
 }
 
 echo -e "DONE install postfix"

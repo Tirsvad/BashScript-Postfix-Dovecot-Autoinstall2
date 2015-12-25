@@ -1,10 +1,14 @@
 #!/bin/bash
-
 POSTFIX_HOSTMASTER="change-me.com" # change it to your domainname
 
 # Define which sql server to use.
 # SQL_SERVER="psql"
 type mysql >/dev/null 2>&1 && SQL_SERVER="mysql" || type psql >/dev/null 2>&1 && SQL_SERVER="psql"
+
+DB_ROOT_PASSWORD="" # change it to your db root password
+DB_MAIL_DB_NAME="servermail"
+DB_MAIL_USER="usermail"
+DB_MAIL_USER_PASSWORD="mailpassword"
 
 FIREWALL_RULES_UP_FILENAME="/etc/iptables.up.rules"
 FIREWALL_SENDMAIL=25

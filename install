@@ -28,6 +28,14 @@ debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Si
 debconf-set-selections <<< "postfix postfix/mailname string $POSTFIX_HOSTMASTER"
 
 aptitude -y -q install postfix
+case "${SQL_SERVER}" in
+  psql)
+    aptitude -y -q install postfix-pgsql
+  ;;
+  mysql)
+    aptitude -y -q install postfix-mysql
+  ;;
+esac
 
 echo -e "\n********************************************************"
 echo -e "* Setting firewall"
@@ -82,7 +90,44 @@ case "${SQL_SERVER}" in
     #TODO sql script that make DB for dovecot
   ;;
   mysql)
-    #TODO sql script that make DB for dovecot
+    cat <<EOF | mysql -uroot -p$SQL_SERVER_ROOT_PASSWORD
+    
+    	CREATE DATABASE IF NOT EXISTS $DB_MAIL_DB_NAME;
+    	GRANT SELECT ON $DB_MAIL_DB_NAME.* TO '$DB_USER'@'127.0.0.1' IDENTIFIED BY '$DB_USER_PASS';
+    	FLUSH PRIVILEGES;
+    	USE $DB_MAIL_DB_NAME;
+    	CREATE TABLE IF NOT EXISTS virtual_domains (
+    	id  INT NOT NULL AUTO_INCREMENT,
+    	name VARCHAR(50) NOT NULL,
+    	PRIMARY KEY (id)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    	CREATE TABLE IF NOT EXISTS virtual_users (
+    	id INT NOT NULL AUTO_INCREMENT,
+    	domain_id INT NOT NULL,
+    	password VARCHAR(106) NOT NULL,
+    	email VARCHAR(120) NOT NULL,
+    	PRIMARY KEY (id),
+    	UNIQUE KEY email (email),
+    	FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    	CREATE TABLE IF NOT EXISTS virtual_aliases (
+    	id INT NOT NULL AUTO_INCREMENT,
+    	domain_id INT NOT NULL,
+    	source varchar(100) NOT NULL,
+    	destination varchar(100) NOT NULL,
+    	PRIMARY KEY (id),
+    	FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    	INSERT INTO servermail.virtual_domains
+    	(id ,name)
+    	VALUES
+    	('1', '$DOMAIN'),
+    	('2', 'mail.$DOMAIN');
+    	INSERT INTO servermail.virtual_users
+    	(id, domain_id, password , email)
+    	VALUES
+    	('1', '1', ENCRYPT('$PASSWORD', CONCAT('\$6\$', SUBSTRING(SHA(RAND()), -16))), '$EMAIL');
+    EOF    
   ;;
 esac
 

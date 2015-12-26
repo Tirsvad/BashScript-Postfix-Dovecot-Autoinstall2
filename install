@@ -21,19 +21,27 @@ firewall_add_rule () {
 }
 
 echo -e "\n********************************************************"
-echo -e "* Installing postfix"
+echo -e "* Installing postfix and dovecot"
 echo -e "********************************************************"
 
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 debconf-set-selections <<< "postfix postfix/mailname string $POSTFIX_HOSTMASTER"
 
 aptitude -y -q install postfix
+aptitude -y -q install dovecot-core
+aptitude -y -q install dovecot-lmtpd
+[[ -n "$FIREWALL_IMAP" || -n "$FIREWALL_IMAPS" ]] && aptitude -y -q install dovecot-imapd
+[[ -n "$FIREWALL_POP" || -n "$FIREWALL_POPS" || -n "$FIREWALL_POPS3" ]] && aptitude -y -q install dovecot-pop3d
+
+
 case "${SQL_SERVER}" in
   psql)
     aptitude -y -q install postfix-pgsql
+    aptitude -y -q install dovecot-pgsql
   ;;
   mysql)
     aptitude -y -q install postfix-mysql
+    aptitude -y -q install dovecot-mysql
   ;;
 esac
 
